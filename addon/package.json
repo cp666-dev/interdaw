@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "InterDAW: open an Ableton Live set in LUNA. A LUNA Add On built with @uaudio/luna-builder-sdk.",
+  "license": "MIT",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",

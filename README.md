@@ -133,5 +133,8 @@ scripts/build-release.sh
 To work on the panel in a browser, run the helper with `INTERDAW_DEV=1` so it answers
 `ua-builder serve` (`http://localhost:8790`), then `npx ua-builder serve` in `addon/`.
 
-The SDK bundle in `addon/vendor/` is © Universal Audio, Inc., under the Apache License 2.0; its
-license and notice are beside it. InterDAW is not made or endorsed by Ableton or Universal Audio.
+## License
+
+InterDAW is released under the [MIT License](LICENSE). The SDK bundle in `addon/vendor/` is
+© Universal Audio, Inc., under the Apache License 2.0; its license and notice are beside it.
+InterDAW is not made or endorsed by Ableton or Universal Audio.
