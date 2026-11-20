@@ -62,7 +62,7 @@ mkdir -p "$HELPER"
 cp -R "$SOURCE" "$HELPER/interdaw_helper"
 find "$HELPER" -name __pycache__ -prune -exec rm -rf {} +
 
-osacompile -o "$APP" -e "do shell script \"cd \" & quoted form of \"$HELPER\" & \" && exec /usr/bin/python3 -m interdaw_helper >> \" & quoted form of \"$LOGS/helper.log\" & \" 2>&1\""
+osacompile -o "$APP" -e "do shell script \"cd \" & quoted form of \"$HELPER\" & \" && exec /usr/bin/python3 -m interdaw_helper >> \" & quoted form of \"$LOGS/helper.log\" & \" 2>&1\"" >/dev/null 2>&1
 # No Dock icon, and a stable identity for the folder access macOS grants it.
 /usr/libexec/PlistBuddy -c "Add :LSUIElement bool true" "$APP/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $LABEL" "$APP/Contents/Info.plist" 2>/dev/null \
