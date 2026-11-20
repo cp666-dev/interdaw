@@ -1,4 +1,4 @@
-# InterDAW
+# <img src="docs/icon.png" alt="" width="64" align="center"> InterDAW
 
 Open an Ableton Live set in LUNA. InterDAW brings in the tracks, clips, MIDI, tempo, meter,
 markers, levels and mutes, suggests UADx plug-ins to get closer to how the set sounded in Live,
