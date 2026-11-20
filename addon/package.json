@@ -1,0 +1,22 @@
+{
+  "name": "interdaw",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "InterDAW: open an Ableton Live set in LUNA. A LUNA Add On built with @uaudio/luna-builder-sdk.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "serve": "ua-builder serve",
+    "install-addon": "ua-builder install",
+    "pack": "ua-builder pack"
+  },
+  "devDependencies": {
+    "@uaudio/luna-builder-sdk": "github:uaudio-labs/luna-builder-sdk#v3.1.2-b3",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

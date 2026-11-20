@@ -1,0 +1,21 @@
+{
+    "package_name": "InterDAW",
+    "id": "com.cp.interdaw",
+    "title": "InterDAW",
+    "version": "1.0.0",
+    "manufacturer": "CP",
+    "description": "Open an Ableton Live set in LUNA: tracks, clips, MIDI, tempo, meter, markers, levels and mutes. Get one-click UADx suggestions to match Live's sound, then send your work back as a Live set, stems or both. Needs the free InterDAW helper on macOS; the panel shows how to install it.",
+    "categories": ["Import & Export"],
+    "sdk_version": "3.1.2",
+    "min_luna_version": "3.1.2",
+    "engines": ["luna"],
+    "requires_plugins": [
+        { "name": "UADx SSL E Channel Strip", "plugin_id": "uaudio_ssl_e_channel_strip", "optional": true },
+        { "name": "UADx API Vision Channel Strip", "plugin_id": "uaudio_api_vision_channel_strip", "optional": true },
+        { "name": "UADx Pure Plate Reverb", "plugin_id": "uaudio_pure_plate", "optional": true },
+        { "name": "UADx Galaxy Tape Echo", "plugin_id": "uaudio_galaxy_tape_echo", "optional": true }
+    ],
+    "html": "index.html",
+    "target": "browser",
+    "icon": "icon.png"
+}

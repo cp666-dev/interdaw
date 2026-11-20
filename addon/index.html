@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>InterDAW</title>
+  <link rel="stylesheet" href="ui/tokens.css">
+  <link rel="stylesheet" href="ui/panel.css">
+</head>
+<body>
+  <div class="idw" id="app">
+    <div class="idw-bridge">
+      <div class="idw-state">
+        <svg class="idw-mark" id="mark" viewBox="0 0 160 100" aria-hidden="true" data-state="offline"><path class="core" d="M24,11 H136 A13,13 0 0 1 149,24 V76 A13,13 0 0 1 136,89 H24 A13,13 0 0 1 11,76 V24 A13,13 0 0 1 24,11 Z"/><path class="ring" fill-rule="evenodd" d="M23,3 H137 A20,20 0 0 1 157,23 V77 A20,20 0 0 1 137,97 H23 A20,20 0 0 1 3,77 V23 A20,20 0 0 1 23,3 Z M24,11 H136 A13,13 0 0 1 149,24 V76 A13,13 0 0 1 136,89 H24 A13,13 0 0 1 11,76 V24 A13,13 0 0 1 24,11 Z"/><path class="letters" d="M34,33 H106 V22 L126,38 L106,54 V43 H34 Z M126,57 H54 V46 L34,62 L54,78 V67 H126 Z"/></svg>
+        <div class="idw-state-text">
+          <div class="idw-state-word" id="word">CONNECTING</div>
+          <div class="idw-state-detail" id="detail"></div>
+        </div>
+        <button class="idw-btn" id="choose" type="button">CHOOSE SET</button>
+      </div>
+      <div class="idw-meter" id="meter" hidden></div>
+    </div>
+    <div class="idw-body">
+      <div class="idw-sec"><div class="idw-sec-title" id="sec-title">ABLETON LIVE SET</div></div>
+      <div class="idw-slots">
+        <div class="idw-drop" id="drop">
+          <div class="idw-drop-title">Drop an Ableton Live set here</div>
+          <div class="idw-drop-hint">or use CHOOSE SET above. The set itself is never changed.</div>
+        </div>
+        <div class="idw-notice" id="offline" hidden>
+          <span class="idw-notice-led"></span>
+          <div class="idw-notice-body">
+            <div class="idw-notice-title" id="offline-title">Install the InterDAW helper</div>
+            <div class="idw-notice-t" id="offline-why">InterDAW reads Live sets with a small helper on your Mac, because an Add On can't open files itself. Paste this into Terminal, press Return, then come back here:</div>
+            <input class="idw-code" id="install-cmd" type="text" readonly spellcheck="false" aria-label="Helper install command">
+            <div class="idw-notice-actions">
+              <button class="idw-btn idw-btn--small" id="install-copy" type="button">COPY</button>
+              <button class="idw-btn idw-btn--small" id="install-help" type="button">INSTRUCTIONS</button>
+            </div>
+          </div>
+        </div>
+        <div class="idw-slot" id="slot" hidden>
+          <div class="idw-slot-body">
+            <div class="idw-slot-title" id="set-name"></div>
+            <div class="idw-check" id="check" hidden><span class="idw-tag idw-tag--check">CHECK</span><span class="idw-check-why" id="check-why"></span></div>
+            <div class="idw-kvs" id="facts"></div>
+          </div>
+          <button class="idw-go" id="import" type="button"><span class="idw-go-label">IMPORT</span></button>
+          <div class="idw-stat" id="stat" hidden><span class="idw-stat-big" id="percent"></span></div>
+        </div>
+        <div class="idw-slot idw-slot--done" id="done" hidden>
+          <svg class="idw-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          <span class="idw-done-title" id="done-title"></span>
+        </div>
+      </div>
+      <div id="send-group" hidden>
+        <div class="idw-sec"><div class="idw-sec-title">SEND BACK</div><button class="idw-btn idw-btn--small" id="send-refresh" type="button">REFRESH</button></div>
+        <div class="idw-slots">
+          <div class="idw-slot" id="send">
+            <div class="idw-slot-body">
+              <div class="idw-slot-title">A folder they can just open</div>
+              <div class="idw-seg" id="send-format">
+                <button class="idw-seg-btn is-on" type="button" data-format="both">SET + STEMS</button>
+                <button class="idw-seg-btn" type="button" data-format="live">LIVE SET</button>
+                <button class="idw-seg-btn" type="button" data-format="stems">STEMS</button>
+              </div>
+              <div class="idw-check" id="send-check" hidden><span class="idw-tag idw-tag--check">CHECK</span><span class="idw-check-why" id="send-why"></span></div>
+              <div class="idw-kvs" id="send-facts"></div>
+            </div>
+            <button class="idw-go" id="send-go" type="button"><span class="idw-go-label">SEND</span></button>
+            <div class="idw-stat" id="send-stat" hidden><span class="idw-stat-big" id="send-percent"></span></div>
+          </div>
+          <div class="idw-slot idw-slot--done" id="send-done" hidden>
+            <svg class="idw-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            <span class="idw-done-title" id="send-done-title"></span>
+            <button class="idw-btn idw-btn--small" id="send-reveal" type="button">SHOW</button>
+          </div>
+        </div>
+      </div>
+      <div id="suggest-group" hidden>
+        <div class="idw-sec"><div class="idw-sec-title">SUGGESTED TO MATCH THE SET</div><button class="idw-btn idw-btn--small" id="go-all" type="button">GO ALL</button></div>
+        <div class="idw-slots" id="suggest"></div>
+      </div>
+      <div id="optional-group" hidden>
+        <div class="idw-sec"><div class="idw-sec-title">OPTIONAL, SILENT IN LIVE</div></div>
+        <div class="idw-slots" id="optional"></div>
+      </div>
+      <div id="failed-group" hidden><div class="idw-sec"><div class="idw-sec-title">FAILED</div><span class="idw-sec-count" id="failed-count"></span></div><ul class="idw-list idw-list--failed" id="failed"></ul></div>
+      <div id="missing-group" hidden><div class="idw-sec"><div class="idw-sec-title">MISSING AUDIO, CLIPS SKIPPED</div><span class="idw-sec-count" id="missing-count"></span></div><ul class="idw-list" id="missing"></ul></div>
+      <div id="warnings-group" hidden><div class="idw-sec"><div class="idw-sec-title">CAN'T MATCH YET</div><span class="idw-sec-count" id="warnings-count"></span></div><ul class="idw-list" id="warnings"></ul></div>
+      <div id="notes-group" hidden><div class="idw-sec"><div class="idw-sec-title">NOTHING TO DO</div><span class="idw-sec-count" id="notes-count"></span></div><ul class="idw-list" id="notes"></ul></div>
+      <div id="rejected-group" hidden><div class="idw-sec"><div class="idw-sec-title">COULDN'T DO</div><span class="idw-sec-count" id="rejected-count"></span></div><ul class="idw-list" id="rejected"></ul></div>
+    </div>
+  </div>
+  <script src="vendor/luna.global.js"></script>
+  <script src="logic.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
