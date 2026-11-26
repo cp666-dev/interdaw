@@ -330,6 +330,16 @@ async function runImport() {
   refreshSend();
 }
 
+const PASTE = 'Paste this into Terminal, press Return, then come back here:';
+const HELPER_NOTICE = {
+  missing: { word: 'HELPER NEEDED', detail: 'Install it to read a set.', title: 'Install the InterDAW helper',
+    why: `InterDAW reads Live sets with a small helper on your Mac, because an Add On can't open files itself. ${PASTE}` },
+  outdated: { word: 'HELPER OUT OF DATE', detail: 'Update it to read a set.', title: 'Update the InterDAW helper',
+    why: `The helper on this Mac is from another version of InterDAW. ${PASTE}` },
+  refused: { word: 'HELPER REFUSED', detail: 'Update it, or report this.', title: 'The helper refused this panel',
+    why: `The helper is running but doesn't accept this panel. Reinstalling it usually fixes this; if not, please report it with helper.log from ~/Library/Logs/InterDAW. ${PASTE}` },
+};
+
 /** Show how to install (or update) the helper until one this panel can use answers. */
 let watchingHelper = false;
 async function watchHelper() {
@@ -337,13 +347,11 @@ async function watchHelper() {
   watchingHelper = true;
   let state;
   while ((state = await AddOnLogic.helperStatus()) !== 'running') {
-    const outdated = state === 'outdated';
-    $('offline-title').textContent = outdated ? 'Update the InterDAW helper' : 'Install the InterDAW helper';
-    $('offline-why').textContent = outdated
-      ? 'The helper on this Mac is from another version of InterDAW. Paste this into Terminal, press Return, then come back here:'
-      : 'InterDAW reads Live sets with a small helper on your Mac, because an Add On can\'t open files itself. Paste this into Terminal, press Return, then come back here:';
+    const notice = HELPER_NOTICE[state];
+    $('offline-title').textContent = notice.title;
+    $('offline-why').textContent = notice.why;
     $('offline').hidden = false;
-    if (!plan) status(outdated ? 'HELPER OUT OF DATE' : 'HELPER NEEDED', outdated ? 'Update it to read a set.' : 'Install it to read a set.', 'offline');
+    if (!plan) status(notice.word, notice.detail, 'offline');
     await new Promise((r) => setTimeout(r, HELPER_RETRY_MS));
   }
   $('offline').hidden = true;

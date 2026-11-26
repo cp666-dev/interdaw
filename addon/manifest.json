@@ -2,7 +2,7 @@
     "package_name": "InterDAW",
     "id": "com.cp.interdaw",
     "title": "InterDAW",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "manufacturer": "CP",
     "description": "Open an Ableton Live set in LUNA: tracks, clips, MIDI, tempo, meter, markers, levels and mutes. Get one-click UADx suggestions to match Live's sound, then send your work back as a Live set, stems or both. Needs the free InterDAW helper on macOS; the panel shows how to install it.",
     "categories": ["Import & Export"],

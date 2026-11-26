@@ -3,7 +3,9 @@
 Set INTERDAW_TEST_ALS to a real set's path to check it reads too. Client files stay out of git.
 """
 
+import contextlib
 import gzip
+import io
 import json
 import os
 import struct
@@ -114,6 +116,24 @@ class ReadSet(unittest.TestCase):
         self.assertEqual(plan['tracks'][0]['clips'], [])
         self.assertEqual(plan['missing'][0]['path'], '/stale/gone.wav')
 
+    def test_a_track_it_cant_read_is_left_out_not_the_set(self):
+        good = track_xml('AudioTrack', 'Good', clip_xml(0, 4, False, 0, 4))
+        bad = track_xml('AudioTrack', 'Odd', clip_xml(0, 4, False, 0, 4)).replace('<CurrentEnd Value="4"/>', '<CurrentEnd Value="soon"/>')
+        with contextlib.redirect_stderr(io.StringIO()):
+            plan = read_set(write_set(self.dir.name, good + bad))
+        self.assertEqual([t['name'] for t in plan['tracks']], ['Good'])
+        self.assertTrue(any('"Odd" could not be read' in w for w in plan['warnings']))
+
+    def test_a_marker_it_cant_read_is_left_out(self):
+        path = write_set(self.dir.name, '')
+        with gzip.open(path, 'rb') as f:
+            xml = f.read().decode().replace('<Locator Id="0"><Time Value="80"/>', '<Locator Id="0"><Time Value="oops"/>')
+        with gzip.open(path, 'wb') as f:
+            f.write(xml.encode())
+        plan = read_set(path)
+        self.assertEqual(plan['locators'], [])
+        self.assertTrue(any('Marker "BREAK" could not be read' in w for w in plan['warnings']))
+
     def test_stretched_clip_is_warned_about(self):
         clips = clip_xml(0, 4, False, 0, 4, warp_beats=BEAT * 1.5)
         plan = read_set(write_set(self.dir.name, track_xml('AudioTrack', 'A', clips)))
@@ -155,6 +175,9 @@ class ReadSet(unittest.TestCase):
 
 class Server(unittest.TestCase):
     def setUp(self):
+        quiet = unittest.mock.patch.object(Handler, 'log_message', lambda *args: None)
+        quiet.start()
+        self.addCleanup(quiet.stop)
         self.server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
         self.addCleanup(self.server.server_close)
@@ -175,11 +198,27 @@ class Server(unittest.TestCase):
         self.assertEqual((status, body['ok']), (200, True))
         self.assertEqual(headers['Access-Control-Allow-Origin'], 'ua-content://com.cp.interdaw')
 
+    def test_the_panel_installed_from_a_package_is_allowed(self):
+        # LUNA 3.1.2 serves an installed Add On from <id>_t<install token>.
+        origin = 'ua-content://com.cp.interdaw_t14af0443ebb84b69af940604f5f9ab76'
+        status, body, headers = self.request('/health', origin)
+        self.assertEqual((status, body['ok']), (200, True))
+        self.assertEqual(headers['Access-Control-Allow-Origin'], origin)
+
+    def test_lookalike_origins_are_refused(self):
+        for origin in ('ua-content://com.cp.interdaw__t14af0443ebb84b69af940604f5f9ab76',  # another id, com.cp.interdaw_t...
+                       'ua-content://com.cp.interdaw_tnothex', 'ua-content://com.cp.interdaw.evil',
+                       'ua-content://com.cp.interdaw_t14af0443ebb84b69af940604f5f9ab76.evil', 'https://com.cp.interdaw'):
+            self.assertEqual(self.request('/health', origin)[0], 403, origin)
+
     def test_other_origins_and_no_origin_are_refused(self):
         for origin in ('https://example.com', None):
-            status, _, headers = self.request('/als/read', origin, {'path': '/etc/hosts'})
+            status, body, headers = self.request('/als/read', origin, {'path': '/etc/hosts'})
             self.assertEqual(status, 403)
-            self.assertIsNone(headers['Access-Control-Allow-Origin'])
+            # The refusal is readable (so a panel can say so) but holds nothing from the set.
+            self.assertEqual(headers['Access-Control-Allow-Origin'], '*')
+            self.assertEqual(set(body), {'error', 'origin'})
+            self.assertEqual(body['origin'], origin)
 
     def test_the_dev_server_is_allowed_only_in_dev_mode(self):
         self.assertEqual(self.request('/health', 'http://localhost:8790')[0], 403)
@@ -189,6 +228,16 @@ class Server(unittest.TestCase):
     def test_health_says_which_api_it_speaks(self):
         _, body, _ = self.request('/health', 'ua-content://com.cp.interdaw')
         self.assertEqual(body['api'], 1)
+
+    def test_an_unexpected_error_is_answered_not_dropped(self):
+        # A dropped connection shows in the panel as "the helper is not running".
+        with unittest.mock.patch('interdaw_helper.server.read_set', side_effect=ValueError('odd value')), \
+                contextlib.redirect_stdout(io.StringIO()) as log:
+            status, body, _ = self.request('/als/read', 'ua-content://com.cp.interdaw', {'path': '/x.als'})
+        self.assertEqual(status, 500)
+        self.assertIn('ValueError: odd value', body['error'])
+        self.assertIn('helper.log', body['error'])
+        self.assertIn('Traceback', log.getvalue())
 
     def test_build_only_writes_to_a_folder_it_prepared(self):
         status, body, _ = self.request('/return/build', 'ua-content://com.cp.interdaw', {'folder': '/tmp', 'setPath': '/x.als', 'prints': [], 'moves': [], 'removed': []})

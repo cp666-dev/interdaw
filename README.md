@@ -91,8 +91,10 @@ refers to but that isn't on this Mac is listed under **MISSING AUDIO**; those cl
   ```
 
   It should print `"ok": true`. Logs are in `~/Library/Logs/InterDAW`.
-- **HELPER OUT OF DATE**: your helper is from another version of InterDAW. Run the install line
-  again to update it.
+- **HELPER OUT OF DATE** or **HELPER REFUSED**: your helper is from another version of InterDAW.
+  Run the install line again to update it.
+- **"The helper is running but didn't finish"**: something in that set stopped the helper. Please
+  report it with `helper.log`, which says what it was.
 - **A set won't open from a folder**: allow "InterDAW Helper" in System Settings > Privacy &
   Security > Files and Folders.
 

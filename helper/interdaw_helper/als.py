@@ -9,6 +9,7 @@ import gzip
 import math
 import os
 import struct
+import traceback
 import xml.etree.ElementTree as ET
 
 from .suggest import build
@@ -51,6 +52,11 @@ def _load_xml(path):
     if len(data) > MAX_XML_BYTES:
         raise AlsError('This set is too large to read.')
     return ET.fromstring(data)
+
+
+def _describe(error):
+    """An unexpected error, short enough for the panel, with its type for a bug report."""
+    return f'{type(error).__name__}: {error}'[:200]
 
 
 def decode_time_signature(value):
@@ -318,12 +324,28 @@ def read_set(path):
             name = _value(track, 'Name/EffectiveName')
             warnings.append(f'Group "{name}" was flattened: its tracks came in without the group.')
         elif track.tag in ('AudioTrack', 'MidiTrack'):
-            tracks.append(_read_track(track, tempo, als_dir, warnings, missing))
+            # One track Live wrote in a way this doesn't expect is left out, not the whole set.
+            try:
+                tracks.append(_read_track(track, tempo, als_dir, warnings, missing))
+            except Exception as error:  # noqa: BLE001
+                traceback.print_exc()
+                name = _value(track, 'Name/EffectiveName') or 'A track'
+                warnings.append(f'"{name}" could not be read, so it was left out ({_describe(error)}).')
 
-    locators = [{'name': _value(locator, 'Name') or 'Marker', 'beat': float(_value(locator, 'Time', '0'))}
-                for locator in live_set.findall('Locators/Locators/Locator')]
+    locators = []
+    for locator in live_set.findall('Locators/Locators/Locator'):
+        name = _value(locator, 'Name') or 'Marker'
+        try:
+            locators.append({'name': name, 'beat': float(_value(locator, 'Time', '0'))})
+        except (TypeError, ValueError) as error:
+            warnings.append(f'Marker "{name}" could not be read, so it was left out ({_describe(error)}).')
     sources = sorted({clip['sourcePath'] for track in tracks for clip in track['clips']})
-    suggestions, notes, unmatched = build(live_set, tempo, tracks)
+    try:
+        suggestions, notes, unmatched = build(live_set, tempo, tracks)
+    except Exception as error:  # noqa: BLE001
+        traceback.print_exc()
+        suggestions, notes = [], []
+        unmatched = [f'No suggestions: part of this set could not be read ({_describe(error)}).']
     return {'source': {'path': path, 'name': os.path.basename(path), 'creator': root.get('Creator')},
             'tempo': tempo, 'timeSignature': meter, 'locators': locators, 'tracks': tracks,
             'sources': sources, 'warnings': warnings + unmatched, 'missing': missing,

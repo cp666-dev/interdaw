@@ -511,7 +511,7 @@ describe('InterDAW helper calls', () => {
     const health = (body) => async () => ({ ok: true, json: async () => body });
     expect(await logic.helperStatus(health({ ok: true, api: 1 }))).toBe('running');
     expect(await logic.helperStatus(health({ ok: true, version: '0.2.0' }))).toBe('outdated');
-    expect(await logic.helperStatus(async () => ({ ok: false, status: 403 }))).toBe('missing');
+    expect(await logic.helperStatus(async () => ({ ok: false, status: 404 }))).toBe('missing');
     expect(await logic.helperStatus(async () => { throw new TypeError('failed'); })).toBe('missing');
   });
 
@@ -524,6 +524,23 @@ describe('InterDAW helper calls', () => {
 
   it('says when the helper is not running', async () => {
     await expect(logic.readSet('/x.als', async () => { throw new TypeError('failed'); })).rejects.toThrow('helper is not running');
+  });
+
+  it('says the helper stopped, not that it is missing, when only the read fails', async () => {
+    const fetchFn = async (url) => {
+      if (url.endsWith('/health')) return { ok: true, status: 200, json: async () => ({ ok: true, api: 1 }) };
+      throw new TypeError('connection dropped');
+    };
+    await expect(logic.readSet('/x.als', fetchFn)).rejects.toThrow("running but didn't finish");
+  });
+
+  it('says when the helper refuses this panel', async () => {
+    const fetchFn = async (url) => {
+      if (url.endsWith('/health')) return { ok: false, status: 403, json: async () => ({ error: 'origin not allowed' }) };
+      throw new TypeError('preflight refused');
+    };
+    expect(await logic.helperStatus(fetchFn)).toBe('refused');
+    await expect(logic.readSet('/x.als', fetchFn)).rejects.toThrow('refused this panel');
   });
 
   it("shows the helper's own error", async () => {

@@ -11,26 +11,18 @@ const AddOnLogic = {
   HELP_URL: 'https://github.com/cp666-dev/interdaw#install-the-helper',
 
   /** Ask the helper to read a set. Rejects with a message the panel can show. */
-  async readSet(path, fetchFn = fetch) {
-    let answer;
-    try {
-      answer = await fetchFn(`${AddOnLogic.HELPER_URL}/als/read`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ path }),
-      });
-    } catch {
-      throw new Error('The InterDAW helper is not running. Install it as the panel shows, then try again.');
-    }
-    const body = await answer.json();
-    if (!answer.ok) throw new Error(body.error ?? `The helper answered ${answer.status}.`);
-    return body;
+  readSet(path, fetchFn = fetch) {
+    return AddOnLogic.helperPost('/als/read', { path }, fetchFn);
   },
 
-  /** 'running', 'missing' (nothing answers) or 'outdated' (a helper for another panel version). */
+  /**
+   * 'running', 'missing' (nothing answers), 'outdated' (a helper for another panel version) or
+   * 'refused' (a helper that doesn't accept this page's origin).
+   */
   async helperStatus(fetchFn = fetch) {
     try {
       const answer = await fetchFn(`${AddOnLogic.HELPER_URL}/health`);
+      if (answer.status === 403) return 'refused';
       if (!answer.ok) return 'missing';
       const body = await answer.json();
       return body.api === AddOnLogic.HELPER_API ? 'running' : 'outdated';
@@ -591,11 +583,19 @@ const AddOnLogic = {
     try {
       answer = await fetchFn(`${AddOnLogic.HELPER_URL}${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
     } catch {
-      throw new Error('The InterDAW helper is not running. Install it as the panel shows, then try again.');
+      throw new Error(AddOnLogic.HELPER_FAILED[await AddOnLogic.helperStatus(fetchFn)]);
     }
-    const reply = await answer.json();
+    const reply = await answer.json().catch(() => ({}));
     if (!answer.ok) throw new Error(reply.error ?? `The helper answered ${answer.status}.`);
     return reply;
+  },
+
+  /** Why a request to the helper failed, by what /health says afterwards. */
+  HELPER_FAILED: {
+    missing: 'The InterDAW helper is not running. Install it as the panel shows, then try again.',
+    outdated: 'The InterDAW helper is from another version of InterDAW. Update it as the panel shows, then try again.',
+    refused: 'The InterDAW helper refused this panel. Please report it, with helper.log from ~/Library/Logs/InterDAW.',
+    running: 'The InterDAW helper is running but didn\'t finish. If macOS asked whether "InterDAW Helper" may open a folder, allow it and try again. Otherwise please report it, with helper.log from ~/Library/Logs/InterDAW.',
   },
 
   /** How long a render may show no progress before it's treated as stuck. */
